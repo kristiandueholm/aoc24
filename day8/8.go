@@ -17,6 +17,13 @@ func getPosDistance(a Pos, b Pos) (int, int) {
 	return a.Row - b.Row, a.Col - b.Col
 }
 
+func withinBounds(pos Pos, maxRow int, maxCol int) bool {
+	return pos.Row >= 0 &&
+		pos.Row <= maxRow &&
+		pos.Col >= 0 &&
+		pos.Col <= maxCol
+}
+
 func main() {
 	input, err := os.Open("input.txt")
 	if err != nil {
@@ -55,7 +62,7 @@ func main() {
 		col++
 	}
 
-	antinodes := make(map[Pos]struct{})
+	antinodesP1 := make(map[Pos]struct{})
 
 	for _, positions := range runeMap {
 		for i := 0; i < len(positions); i++ {
@@ -63,26 +70,28 @@ func main() {
 				antennaA := positions[i]
 				antennaB := positions[j]
 				rowDist, colDist := getPosDistance(antennaA, antennaB)
-				possibleAntinodes := []Pos{
+				possibleAntinodesP1 := []Pos{
 					{Row: antennaA.Row + rowDist, Col: antennaA.Col + colDist},
 					{Row: antennaA.Row - rowDist, Col: antennaA.Col - colDist},
 					{Row: antennaB.Row + rowDist, Col: antennaB.Col + colDist},
 					{Row: antennaB.Row - rowDist, Col: antennaB.Col - colDist},
 				}
-				for _, possibleAntinode := range possibleAntinodes {
+				for _, possibleAntinode := range possibleAntinodesP1 {
 					if possibleAntinode == antennaA || possibleAntinode == antennaB {
 						continue
 					}
-					if possibleAntinode.Col < 0 || possibleAntinode.Col > maxCol {
+					if !withinBounds(possibleAntinode, maxRow, maxCol) {
 						continue
 					}
-					if possibleAntinode.Row < 0 || possibleAntinode.Row > maxRow {
-						continue
-					}
-					antinodes[possibleAntinode] = struct{}{}
+					antinodesP1[possibleAntinode] = struct{}{}
 				}
+				// possibleAntinodesP2 := make([]Pos, 0)
+				// n := 1
+				// for {
+
+				// }
 			}
 		}
 	}
-	fmt.Println(len(antinodes))
+	fmt.Printf("Part 1: %d\n", len(antinodesP1))
 }
