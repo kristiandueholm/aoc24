@@ -24,9 +24,9 @@ func withinBounds(pos Pos, maxRow int, maxCol int) bool {
 		pos.Col <= maxCol
 }
 
-func allOutOfBounds(positions []Pos, maxRow int, macCol int) bool {
+func allOutOfBounds(positions []Pos, maxRow int, maxCol int) bool {
 	for _, pos := range positions {
-		if withinBounds(pos, maxRow, maxRow) {
+		if withinBounds(pos, maxRow, maxCol) {
 			return false
 		}
 	}
