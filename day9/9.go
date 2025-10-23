@@ -6,38 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
-	"strconv"
-	"strings"
 )
-
-func getDotString(input io.ReadCloser) string {
-	reader := bufio.NewReader(input)
-	n := 0
-	var builder strings.Builder
-	for {
-		b, err := reader.ReadByte()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			log.Fatal(err)
-		}
-		digit := int(b - '0')
-		var c string
-		if n%2 == 0 {
-			c = strconv.Itoa(n)
-		} else {
-			c = "."
-		}
-		s := strings.Repeat(c, digit)
-		_, err = builder.WriteString(s)
-		if err != nil {
-			log.Fatal(err)
-		}
-		n++
-	}
-	return builder.String()
-}
 
 func fillNInt(x int, n int, arr *[]int) {
 	for range n {
@@ -53,10 +22,9 @@ func getChecksum(arr []int) int {
 	return sum
 }
 
-func part1(input io.ReadCloser) {
+func getDenseArray(input io.ReadCloser) []int {
 	reader := bufio.NewReader(input)
 	dense := make([]int, 0)
-	result := make([]int, 0)
 	for {
 		r, _, err := reader.ReadRune()
 		if err == io.EOF {
@@ -70,6 +38,11 @@ func part1(input io.ReadCloser) {
 		}
 		dense = append(dense, int(r-'0'))
 	}
+	return dense
+}
+
+func part1(dense []int) {
+	result := make([]int, 0)
 	i, j := 0, len(dense)-1
 	for i < j {
 		if i%2 == 0 {
@@ -98,11 +71,94 @@ func part1(input io.ReadCloser) {
 	fmt.Println(getChecksum(result))
 }
 
+type ItemType int
+
+const (
+	File ItemType = iota
+	Gap
+)
+
+type DiskLocation struct {
+	Size  int
+	Type  ItemType
+	Moved bool
+	Index int
+}
+
+func part2(dense []int) {
+	locations := make([]DiskLocation, len(dense))
+
+	for i := range dense {
+		if i%2 == 0 {
+			locations[i] = DiskLocation{Size: dense[i], Type: File, Index: i / 2}
+		} else {
+			locations[i] = DiskLocation{Size: dense[i], Type: Gap, Index: i / 2}
+		}
+	}
+
+	// j on items from end moving down
+
+	for j := len(dense) - 1; j > 0; j-- {
+		if locations[j].Moved {
+			continue
+		}
+		if locations[j].Type == Gap {
+			continue
+		}
+		// i on gaps from start to j
+		for i := 1; i < j; i++ {
+			if locations[i].Type != Gap {
+				continue
+			}
+			if locations[i].Size == locations[j].Size {
+				locations[i] = locations[j]
+				locations[i].Moved = true
+				locations[j].Type = Gap
+				break
+			}
+			// Need to make a gap for remaining size
+			if locations[i].Size > locations[j].Size {
+				remainingSize := locations[i].Size - locations[j].Size
+				locations[i] = locations[j]
+				locations[i].Moved = true
+				locations[j].Type = Gap
+				newGap := DiskLocation{Size: remainingSize, Type: Gap}
+				newGapIndex := i + 1
+				locations = append(locations, DiskLocation{})
+				copy(locations[newGapIndex+1:], locations[newGapIndex:])
+				locations[newGapIndex] = newGap
+				break
+			}
+		}
+		//j -= 1
+	}
+	result := make([]int, 0)
+	for _, l := range locations {
+		if l.Type == Gap {
+			fillNInt(0, l.Size, &result)
+		} else {
+			fillNInt(l.Index, l.Size, &result)
+		}
+	}
+
+	fmt.Println(result[:50])
+
+	fmt.Println(getChecksum(result))
+}
+
+func passCopy(a []int) []int {
+	b := make([]int, len(a))
+	copy(b, a)
+	return b
+}
+
 func main() {
 	input, err := os.Open("input.txt")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer input.Close()
-	part1(input)
+	dense := getDenseArray(input)
+	part1(passCopy(dense))
+	part2(passCopy(dense))
 }
