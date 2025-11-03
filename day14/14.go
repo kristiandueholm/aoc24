@@ -125,7 +125,7 @@ func main() {
 	}
 	part1 := CalcQuadrants(robotCount, width, height)
 	fmt.Println(part1)
-	for t := range time {
+	for t := range 100000 {
 		rmap := make(map[Loc]int, 0)
 		for i := range robots {
 			r := robots[i]
